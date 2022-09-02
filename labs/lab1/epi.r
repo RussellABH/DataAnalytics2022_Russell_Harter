@@ -1,0 +1,5 @@
+help(read.csv)
+epiData = read.csv(file.choose(), header = TRUE)
+head(epiData)
+summary(epiData)
+summary(epiData$Landarea)
