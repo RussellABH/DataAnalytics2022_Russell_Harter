@@ -1,5 +1,5 @@
 # read in the data and set the names accordingly
-EPI_data <- read.csv("2010EPI_data.csv")
+EPI_data <- read.csv("../data/2010EPI_data.csv")
 names(EPI_data) <- EPI_data[1,]
 EPI_data <- EPI_data[-1,]
 View(EPI_data)
