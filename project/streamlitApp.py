@@ -19,6 +19,11 @@ st.set_page_config(
 )
 
 es_indices = {
+    "ukraine-data-lite": {
+        "embedding_type": "sbert",
+        "example_query": "US should arm Ukraine with fighter jets.",
+        "example_aspects": ["risks of getting involved", "Russian war crimes"]
+    },
     "coronavirus-data-all-lite": {
         "embedding_type": "use_large",
         "example_query": "Shut down the schools!",
@@ -38,11 +43,6 @@ es_indices = {
         "embedding_type": "use_large",
         "example_query": "Heroine",
         "example_aspects": ["can't stop", "stay away"]
-    },
-    "ukraine-data-lite": {
-        "embedding_type": "sbert",
-        "example_query": "US should arm Ukraine with fighter jets.",
-        "example_aspects": ["risks of getting involved", "Russian war crimes"]
     },
     "vaccine-data-pubhealth-quotes": {
         "embedding_type": "sbert",
@@ -88,6 +88,7 @@ def get_aspect_similarities(tweet_embeddings, embedding_type, aspects):
     embedding_model = get_embedding_model(embedding_type)
     aspect_similarities = asp.compute_aspect_similarities(
         tweet_embeddings, embedding_type, embedding_model, aspects)
+    # print("Aspect similarities:", aspect_similarities)
     return aspect_similarities
 
 @st.cache(allow_output_mutation=True, max_entries=1)
@@ -149,6 +150,9 @@ def run():
     elif len(date_range) == 1:
         date_range = (date_range[0], date_boundaries[1])
     tweet_text, tweet_embeddings, tweet_scores = get_query_results(es_index, embedding_type, query, date_range, max_results)
+    # print("Tweet text: ", tweet_text[0])
+    # print("Tweet embeddings: ", tweet_embeddings)
+    # print("Tweet scores: ", tweet_scores)
     aspect_similarities = get_aspect_similarities(tweet_embeddings, embedding_type, aspects)
 
     # Step 3: Filter results by min query and aspect similarity

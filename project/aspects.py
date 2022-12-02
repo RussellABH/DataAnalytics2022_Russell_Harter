@@ -1,3 +1,4 @@
+import pprint
 import numpy as np
 from datetime import datetime
 from hdbscan import HDBSCAN
@@ -15,6 +16,7 @@ def get_tweet_text(hit):
     text = (hit["extended_tweet"]["full_text"] if "extended_tweet" in hit 
             else hit["full_text"] if "full_text" in hit 
             else hit["text"])
+
     quoted_text = None
     if "quoted_status" in hit:
         quoted_status = hit["quoted_status"]
@@ -22,6 +24,8 @@ def get_tweet_text(hit):
                       else quoted_status["full_text"] if "full_text" in quoted_status 
                       else quoted_status["text"])
 
+    # print("text:", text)
+    # print("quoted_text:", quoted_text)
     return text, quoted_text
 
 def get_base_filters(embedding_type):
@@ -68,7 +72,6 @@ def get_query(embedding_type, query_embedding, date_range):
         }
     }
     return query
-
 def run_query(es_uri, es_index, embedding_type, embedding_model, query, date_range, max_results=1000):
     # Embed query
     if embedding_type == "sbert":
@@ -95,7 +98,13 @@ def run_query(es_uri, es_index, embedding_type, embedding_model, query, date_ran
             tweet_scores.append(hit.meta.score-1.0)
             if len(tweet_embeddings) == max_results:
                 break
-
+        print("---------------Hit---------------")
+        print("Type of hit", type(hit))
+        print("Vars of hit")
+        pprint.pprint(vars(hit))
+        
+        for k, v in enumerate(hit):
+            print(k, v)
         tweet_embeddings = np.vstack(tweet_embeddings)
         tweet_scores = np.array(tweet_scores)
 
