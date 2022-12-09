@@ -161,7 +161,7 @@ def cluster_aspect_similarities(aspect_similarities, clustering_type, kmeans_n_c
         mean_shift = MeanShift(bandwidth=mean_shift_bandwidth, bin_seeding=mean_shift_bin_seeding)
         cluster_assignments = mean_shift.fit_predict(aspect_similarities)
 
-        # This is prone to setting all point to one cluster, so we disable silhouette analysis if that's the case
+        # This is prone to setting all points to one cluster, so we disable silhouette analysis if that's the case
         if len(set(cluster_assignments)) < 2: # This is slow but shouldn't make a visible difference
             do_silhouette_analysis = False
     else:
