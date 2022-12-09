@@ -129,19 +129,26 @@ def run():
 
         with clustering_tab:
             clustering_space = st.selectbox("Clustering Space", ["aspect", "embedding"], key="clustering_space")
-            clustering_type = st.selectbox("Clustering Type", ["kmeans", "hdbscan"], key="clustering_type")
+            clustering_type = st.selectbox("Clustering Type", ["kmeans", "hdbscan", "mean_shift"], key="clustering_type")
 
             kmeans_n_clusters = None
             hdbscan_min_cluster_size = None
             hdbscan_min_samples = None
+            mean_shift_bandwidth = None
+            mean_shift_bin_seeding = None
             if clustering_type == "kmeans":
                 kmeans_n_clusters = st.slider("# of Clusters (set 0 to detect)", 0, 30, key="kmeans_n_clusters", 
                                               value=5, step=1)
-            else:
+            elif clustering_type == "hdbscan":
                 hdbscan_min_cluster_size = st.slider("Min Cluster Size", 5, 100, key="hdbscan_min_cluster_size", 
                                                      value=5, step=5)
                 hdbscan_min_samples = st.slider("Min Samples", 1, 100, key="hdbscan_min_samples",
                                                 value=1, step=1)
+            elif clustering_type == "mean_shift":
+                mean_shift_bandwidth = st.slider("Bandwidth (Set 0 to auto detect, can be slow)", 0.0, 0.25, key="mean_shift_bandwidth", value=0.0, step=0.01) # value = None means auto, might not work
+                mean_shift_bin_seeding = st.checkbox("Bin Seeding (Will run faster, might be less accurate)", key="mean_shift_bin_seeding", value=True)
+            else:
+                raise ValueError("Invalid clustering type")
 
     # Step 2: Execute the query and compute aspect similarities
     # (results are cached for unchanged query and aspect parameters)
@@ -169,7 +176,7 @@ def run():
     vectors_to_cluster = filtered_aspect_similarities if clustering_space == "aspect" else filtered_tweet_embeddings
     if vectors_to_cluster.shape[0] > 0:
         cluster_assignments, silhouette_score = get_cluster_assignments(
-            vectors_to_cluster, clustering_type, kmeans_n_clusters, hdbscan_min_cluster_size, hdbscan_min_samples
+            vectors_to_cluster, clustering_type, kmeans_n_clusters, hdbscan_min_cluster_size, hdbscan_min_samples, mean_shift_bandwidth, mean_shift_bin_seeding
         )
         actual_n_clusters = np.max(cluster_assignments) + 1
     else:

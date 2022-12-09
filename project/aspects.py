@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime
 from hdbscan import HDBSCAN
 from sklearn.cluster import KMeans
+from sklearn.cluster import MeanShift
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search
 from textwrap import wrap
@@ -139,7 +140,8 @@ def compute_aspect_similarities(tweet_embeddings, embedding_type, embedding_mode
     return aspect_similarities
 
 def cluster_aspect_similarities(aspect_similarities, clustering_type, kmeans_n_clusters, 
-                                hdbscan_min_cluster_size, hdbscan_min_samples):
+                                hdbscan_min_cluster_size, hdbscan_min_samples, mean_shift_bandwidth, mean_shift_bin_seeding):
+    do_silhouette_analysis = True
     if clustering_type == "kmeans":
         if kmeans_n_clusters > 0:
             kmeans_n_clusters = min(kmeans_n_clusters, aspect_similarities.shape[0])
@@ -152,8 +154,21 @@ def cluster_aspect_similarities(aspect_similarities, clustering_type, kmeans_n_c
         hdbscan = HDBSCAN(min_cluster_size=hdbscan_min_cluster_size,
                           min_samples=hdbscan_min_samples)
         cluster_assignments = hdbscan.fit_predict(aspect_similarities)
+    elif clustering_type == "mean_shift":
+        if mean_shift_bandwidth == 0: # auto
+            mean_shift_bandwidth = None
+
+        mean_shift = MeanShift(bandwidth=mean_shift_bandwidth, bin_seeding=mean_shift_bin_seeding)
+        cluster_assignments = mean_shift.fit_predict(aspect_similarities)
+
+        # This is prone to setting all point to one cluster, so we disable silhouette analysis if that's the case
+        if len(set(cluster_assignments)) < 2: # This is slow but shouldn't make a visible difference
+            do_silhouette_analysis = False
     else:
         raise ValueError(f"Unsupported clustering type '{clustering_type}'.")
 
-    silhouette_score = cluster_helpers.get_silhouette_score(aspect_similarities, cluster_assignments)
+    if do_silhouette_analysis:
+        silhouette_score = cluster_helpers.get_silhouette_score(aspect_similarities, cluster_assignments)
+    else: # mean shift
+        silhouette_score = 0
     return cluster_assignments, silhouette_score
