@@ -35,7 +35,7 @@ def get_base_filters(embedding_type):
         }
     }, {
         "exists": {
-            "field": f"embedding.{embedding_type}.primary"
+            "field": f"embedding.{embedding_type}.quoted"
         }
     }]
 
@@ -56,7 +56,7 @@ def get_query(embedding_type, query_embedding, date_range):
 
     query = {
         "_source": ["id_str", "text", "extended_tweet.full_text", "quoted_status.text", 
-                    "quoted_status.extended_tweet.full_text", f"embedding.{embedding_type}.primary"],
+                    "quoted_status.extended_tweet.full_text", f"embedding.{embedding_type}.quoted"],
         "query": {
             "script_score": {
                 "query": {
@@ -91,20 +91,14 @@ def run_query(es_uri, es_index, embedding_type, embedding_model, query, date_ran
         tweet_embeddings = []
         tweet_scores = []
         for hit in s.execute():
-            tweet_embeddings.append(np.array(hit["embedding"][embedding_type]["primary"]))
+            tweet_embeddings.append(np.array(hit["embedding"][embedding_type]["quoted"]))
             text, quoted_text = get_tweet_text(hit)
             tweet_text.append(f"Tweet:<br>----------<br>{text_wrap(quoted_text)}<br><br>"
                               f"Response:<br>----------<br>{text_wrap(text)}")
             tweet_scores.append(hit.meta.score-1.0)
             if len(tweet_embeddings) == max_results:
                 break
-        print("---------------Hit---------------")
-        print("Type of hit", type(hit))
-        print("Vars of hit")
-        pprint.pprint(vars(hit))
-        
-        for k, v in enumerate(hit):
-            print(k, v)
+   
         tweet_embeddings = np.vstack(tweet_embeddings)
         tweet_scores = np.array(tweet_scores)
 
