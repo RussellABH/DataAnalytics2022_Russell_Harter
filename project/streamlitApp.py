@@ -145,7 +145,7 @@ def run():
                 hdbscan_min_samples = st.slider("Min Samples", 1, 100, key="hdbscan_min_samples",
                                                 value=1, step=1)
             elif clustering_type == "mean_shift":
-                mean_shift_bandwidth = st.slider("Bandwidth (Set 0 to auto detect, can be slow)", 0.0, 0.25, key="mean_shift_bandwidth", value=0.0, step=0.01) # value = None means auto, might not work
+                mean_shift_bandwidth = st.slider("Bandwidth (Set 0 to auto detect, can be slow)", 0.0, 0.15, key="mean_shift_bandwidth", value=0.0, step=0.005) # value = None means auto, might not work
                 mean_shift_bin_seeding = st.checkbox("Bin Seeding (Will run faster, might be less accurate)", key="mean_shift_bin_seeding", value=True)
             else:
                 raise ValueError("Invalid clustering type")
